@@ -1,0 +1,192 @@
+{
+	"name": "online_incremental_copy",
+	"properties": {
+		"activities": [
+			{
+				"name": "CopyFiles",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "LastModifiedSource",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "Source",
+						"value": "online//"
+					},
+					{
+						"name": "Destination",
+						"value": "raw/online/"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": false,
+							"modifiedDatetimeStart": {
+								"value": "@activity('LookupWatermarkOld').output.firstRow.WatermarkValue",
+								"type": "Expression"
+							},
+							"modifiedDatetimeEnd": {
+								"value": "@variables('LastModifiedSource')",
+								"type": "Expression"
+							},
+							"wildcardFileName": "*",
+							"deleteFilesAfterCompletion": false
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings",
+							"metadata": [
+								{
+									"name": "LastModified",
+									"value": "$$LASTMODIFIED"
+								}
+							]
+						}
+					},
+					"enableStaging": false,
+					"parallelCopies": 32,
+					"enableSkipIncompatibleRow": false,
+					"skipErrorFile": {
+						"fileMissing": true
+					},
+					"validateDataConsistency": false,
+					"dataIntegrationUnits": 2
+				},
+				"inputs": [
+					{
+						"referenceName": "online_source_items",
+						"type": "DatasetReference",
+						"parameters": {
+							"Filename": "*"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "online_sink",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "LookupWatermarkOld",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT\nTableName,\nWatermarkValue\nFROM\nstg.watermarktable \nWHERE\nTableName = 'OnlineBlob'",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "sink_watermarktable",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "StoredProceduretoWriteWatermarkActivity",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "CopyFiles",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[usp_write_watermark]",
+					"storedProcedureParameters": {
+						"LastModifiedtime": {
+							"value": {
+								"value": "@variables('LastModifiedSource')",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"TableName": {
+							"value": {
+								"value": "@{activity('LookupWatermarkOld').output.firstRow.TableName}",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "azurementoringsql",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "LastModifiedSource",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "LookupWatermarkOld",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "LastModifiedSource",
+					"value": {
+						"value": "@pipeline().TriggerTime",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"LastModified": {
+				"type": "String"
+			},
+			"LastModifiedSource": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-04-05T12:57:54Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

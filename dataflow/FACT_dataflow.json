@@ -1,0 +1,179 @@
+{
+	"name": "FACT_dataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "OnlinePurchase_sql_3nf",
+						"type": "DatasetReference"
+					},
+					"name": "OnlinePurchase"
+				},
+				{
+					"dataset": {
+						"referenceName": "Movies_sql_DIM",
+						"type": "DatasetReference"
+					},
+					"name": "MoviesDIM"
+				},
+				{
+					"dataset": {
+						"referenceName": "OnlineService_sql_DIM",
+						"type": "DatasetReference"
+					},
+					"name": "OnlineServiceDIM"
+				},
+				{
+					"dataset": {
+						"referenceName": "OnlinePurchase_sql_3nf",
+						"type": "DatasetReference"
+					},
+					"name": "OnlinePurchaseMonth"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "OnlinePurchase_sql_dim",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "OnlinePurchase_monthly_sql_dim",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "join1"
+				},
+				{
+					"name": "join2"
+				},
+				{
+					"name": "join3"
+				},
+				{
+					"name": "join4"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          MovieIdNK as integer,",
+				"          ServiceCode as string,",
+				"          Price as decimal(4,1),",
+				"          TransactionId as string,",
+				"          TransactionDate as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT \\n     m.MovieIdNK\\n     ,s.ServiceCode\\n     ,[Price]\\n     ,[TransactionId]\\n     ,FORMAT([TransactionDate], \\'yyyyMMdd\\') as TransactionDate\\nFROM [dbo].[tOnlinePurchase] p\\nJOIN dbo.tOnlineService s ON s.ServiceId = p.ServiceId\\nJOIN dbo.tMovies m ON m.MovieId = p.MovieId',",
+				"     format: 'query') ~> OnlinePurchase",
+				"source(output(",
+				"          MovieKey as integer,",
+				"          MovieIdNK as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT\\nMovieKey\\n,MovieIdNK\\nFROM dbo.DimMovie',",
+				"     format: 'query') ~> MoviesDIM",
+				"source(output(",
+				"          ServiceKey as integer,",
+				"          ServiceCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT\\nServiceKey\\n,ServiceCode\\nFROM dbo.DimOnlineService',",
+				"     format: 'query') ~> OnlineServiceDIM",
+				"source(output(",
+				"          MonthKey as integer,",
+				"          MovieIdNK as integer,",
+				"          ServiceCode as string,",
+				"          PurchaseAmount as decimal(38,1),",
+				"          PurchaseQuantity as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT \\n     FORMAT([TransactionDate], \\'yyyyMM\\') as MonthKey\\n     ,m.MovieIdNK\\n     ,s.ServiceCode\\n     ,SUM([Price]) PurchaseAmount\\n     ,COUNT(*) PurchaseQuantity\\nFROM [dbo].[tOnlinePurchase] p\\nJOIN dbo.tOnlineService s ON s.ServiceId = p.ServiceId\\nJOIN dbo.tMovies m ON m.MovieId = p.MovieId\\nGROUP BY \\n     FORMAT([TransactionDate], \\'yyyyMM\\')\\n     ,m.MovieIdNK\\n     ,s.ServiceCode',",
+				"     format: 'query') ~> OnlinePurchaseMonth",
+				"OnlinePurchase, MoviesDIM join(OnlinePurchase@MovieIdNK == MoviesDIM@MovieIdNK,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"join1, OnlineServiceDIM join(OnlinePurchase@ServiceCode == OnlineServiceDIM@ServiceCode,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join2",
+				"OnlinePurchaseMonth, MoviesDIM join(OnlinePurchaseMonth@MovieIdNK == MoviesDIM@MovieIdNK,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join3",
+				"join3, OnlineServiceDIM join(OnlinePurchaseMonth@ServiceCode == OnlineServiceDIM@ServiceCode,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join4",
+				"join2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          DateKey as integer,",
+				"          OnlineServiceKey as integer,",
+				"          MovieKey as integer,",
+				"          Price as decimal(4,1),",
+				"          TransactionId as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     preSQLs:['TRUNCATE TABLE [dbo].[FactOnlinePurchase]'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          DateKey = TransactionDate,",
+				"          OnlineServiceKey = ServiceKey,",
+				"          MovieKey,",
+				"          Price,",
+				"          TransactionId",
+				"     )) ~> sink1",
+				"join4 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          MonthKey as integer,",
+				"          OnlineServiceKey as integer,",
+				"          PurchaseAmount as decimal(10,1),",
+				"          PurchaseQuantity as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          MonthKey,",
+				"          OnlineServiceKey = ServiceKey,",
+				"          PurchaseAmount,",
+				"          PurchaseQuantity",
+				"     )) ~> sink2"
+			]
+		}
+	}
+}

@@ -1,0 +1,63 @@
+{
+	"name": "online_master",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute incremental_copy",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "online_incremental_copy",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Execute copy to sql server",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute incremental_copy",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "online_copy_sql",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Execute archive",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute copy to sql server",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "online_archive",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2023-04-02T20:48:43Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,19 @@
+{
+	"name": "ratings_file",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "azurementoringaumhs",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "ratings.csv",
+				"container": "module4"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

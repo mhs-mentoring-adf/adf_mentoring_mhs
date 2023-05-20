@@ -1,0 +1,22 @@
+{
+	"name": "SqlServerOnPremice",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"connectionString": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "KeyVaultDefault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "local-sqlServer-serverName"
+			}
+		},
+		"connectVia": {
+			"referenceName": "SelfHostedIR",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
