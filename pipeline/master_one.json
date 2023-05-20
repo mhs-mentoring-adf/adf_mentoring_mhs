@@ -1,0 +1,63 @@
+{
+	"name": "master_one",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute update database",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute copy to data lake",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "movies_copy_sql",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Execute archive source files",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute update database",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "movies_archive",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Execute copy to data lake",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "movies_copy_with_date",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2023-03-12T16:06:52Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

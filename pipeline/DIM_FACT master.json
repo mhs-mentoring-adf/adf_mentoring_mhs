@@ -1,0 +1,43 @@
+{
+	"name": "DIM_FACT master",
+	"properties": {
+		"activities": [
+			{
+				"name": "DIM_OnlineService_Movies",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DIM_OnlineService_Movies",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Fact_OnlinePurchase_OnlinePurchase_MonthlySnapshot",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "DIM_OnlineService_Movies",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Fact_OnlinePurchase_OnlinePurchase_MonthlySnapshot",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2023-04-13T18:30:29Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

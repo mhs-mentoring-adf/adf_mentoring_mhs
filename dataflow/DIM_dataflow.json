@@ -1,0 +1,123 @@
+{
+	"name": "DIM_dataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "movies_sql_3nf",
+						"type": "DatasetReference"
+					},
+					"name": "Movies"
+				},
+				{
+					"dataset": {
+						"referenceName": "OnlineService_sql_3nf",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Movies_sql_DIM",
+						"type": "DatasetReference"
+					},
+					"name": "DimMovie"
+				},
+				{
+					"dataset": {
+						"referenceName": "OnlineService_sql_DIM",
+						"type": "DatasetReference"
+					},
+					"name": "DimOnlineService"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "derivedColumn2"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          MovieIdNK as integer,",
+				"          Title as string,",
+				"          ReleaseDate as date,",
+				"          Runtime as integer,",
+				"          MovieStatusName as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT\\n     MovieIdNK\\n     ,Title\\n     ,ReleaseDate\\n     ,Runtime\\n     ,s.MovieStatusName\\nFROM\\n     dbo.tmovies m\\n     JOIN [dbo].[tMovieStatus] s on m.MovieStatusId = s.MovieStatusId',",
+				"     format: 'query') ~> Movies",
+				"source(output(",
+				"          ServiceCode as string,",
+				"          ServiceName as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT\\n    ServiceCode\\n    ,ServiceName\\nFROM\\n    dbo.tOnlineService',",
+				"     format: 'query') ~> source1",
+				"Movies derive(CreatedDate = currentTimestamp(),",
+				"          ModifiedDate = currentTimestamp()) ~> derivedColumn1",
+				"source1 derive(CreatedDate = currentTimestamp(),",
+				"          ModifiedDate = currentTimestamp()) ~> derivedColumn2",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          MovieKey as integer,",
+				"          MovieIdNK as integer,",
+				"          Title as string,",
+				"          ReleaseDate as date,",
+				"          Runtime as integer,",
+				"          MovieStatus as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     preSQLs:['TRUNCATE TABLE [dbo].[DimMovie]'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          MovieIdNK,",
+				"          Title,",
+				"          ReleaseDate,",
+				"          Runtime,",
+				"          MovieStatus = MovieStatusName,",
+				"          CreatedDate,",
+				"          ModifiedDate",
+				"     )) ~> DimMovie",
+				"derivedColumn2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ServiceKey as integer,",
+				"          ServiceCode as string,",
+				"          ServiceName as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     preSQLs:['TRUNCATE TABLE DimOnlineService'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> DimOnlineService"
+			]
+		}
+	}
+}

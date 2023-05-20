@@ -1,0 +1,19 @@
+{
+	"name": "movies_archive_sink",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "azurementoringdatalakemhs",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "movie/archive",
+				"fileSystem": "raw"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

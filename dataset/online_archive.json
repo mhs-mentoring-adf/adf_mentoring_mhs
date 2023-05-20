@@ -1,0 +1,19 @@
+{
+	"name": "online_archive",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "azurementoringdatalakemhs",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "online/archive",
+				"fileSystem": "raw"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
