@@ -1,0 +1,39 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "mentoring-adf-mhs"
+		},
+		"azurementoringaumhs_connectionString": {
+			"value": ""
+		},
+		"azurementoringsql_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=azure-mentoring-mykhailo-senchuk.database.windows.net;Initial Catalog=movies;User ID=mhs"
+		},
+		"KeyVaultDefault_properties_typeProperties_baseUrl": {
+			"value": "https://mentoring-key-vault-mhs.vault.azure.net/"
+		},
+		"SqlServerOnPremice_properties_typeProperties_connectionString_secretName": {
+			"value": "local-sqlServer-serverName"
+		},
+		"azurementoringDataMart_properties_typeProperties_connectionString_secretName": {
+			"value": "azurementoring-sql-datamart"
+		},
+		"azurementoringdatalakemhs_properties_typeProperties_url": {
+			"value": "https://azurementoringdatalakemh.dfs.core.windows.net"
+		},
+		"azurementoringstoragemhs_properties_typeProperties_sasUri_secretName": {
+			"value": "azurementoringstoragemhs-sas-url"
+		},
+		"azurementoringstoragemhs_online_properties_typeProperties_sasUri_secretName": {
+			"value": "azurementoringstoragemhs-online"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

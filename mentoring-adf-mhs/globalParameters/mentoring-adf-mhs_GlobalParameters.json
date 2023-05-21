@@ -1,0 +1,6 @@
+{
+	"logic_apps_html": {
+		"type": "string",
+		"value": "https://mentoring-key-vault-mhs.vault.azure.net/secrets/azurementoring-logicapps-url/2566b82a7fdd4111bf04a00b8701e784?api-version=7.0"
+	}
+}

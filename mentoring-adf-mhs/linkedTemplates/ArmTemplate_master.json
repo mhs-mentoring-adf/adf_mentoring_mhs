@@ -1,0 +1,139 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "mentoring-adf-mhs"
+		},
+		"azurementoringaumhs_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'azurementoringaumhs'"
+		},
+		"azurementoringsql_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'azurementoringsql'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=azure-mentoring-mykhailo-senchuk.database.windows.net;Initial Catalog=movies;User ID=mhs"
+		},
+		"KeyVaultDefault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://mentoring-key-vault-mhs.vault.azure.net/"
+		},
+		"SqlServerOnPremice_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "local-sqlServer-serverName"
+		},
+		"azurementoringDataMart_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "azurementoring-sql-datamart"
+		},
+		"azurementoringdatalakemhs_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://azurementoringdatalakemh.dfs.core.windows.net"
+		},
+		"azurementoringstoragemhs_properties_typeProperties_sasUri_secretName": {
+			"type": "string",
+			"defaultValue": "azurementoringstoragemhs-sas-url"
+		},
+		"azurementoringstoragemhs_online_properties_typeProperties_sasUri_secretName": {
+			"type": "string",
+			"defaultValue": "azurementoringstoragemhs-online"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "mentoring-adf-mhs_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"azurementoringaumhs_connectionString": {
+						"value": "[parameters('azurementoringaumhs_connectionString')]"
+					},
+					"KeyVaultDefault_properties_typeProperties_baseUrl": {
+						"value": "[parameters('KeyVaultDefault_properties_typeProperties_baseUrl')]"
+					},
+					"azurementoringdatalakemhs_properties_typeProperties_url": {
+						"value": "[parameters('azurementoringdatalakemhs_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "mentoring-adf-mhs_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"azurementoringsql_connectionString": {
+						"value": "[parameters('azurementoringsql_connectionString')]"
+					},
+					"SqlServerOnPremice_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('SqlServerOnPremice_properties_typeProperties_connectionString_secretName')]"
+					},
+					"azurementoringDataMart_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('azurementoringDataMart_properties_typeProperties_connectionString_secretName')]"
+					},
+					"azurementoringstoragemhs_properties_typeProperties_sasUri_secretName": {
+						"value": "[parameters('azurementoringstoragemhs_properties_typeProperties_sasUri_secretName')]"
+					},
+					"azurementoringstoragemhs_online_properties_typeProperties_sasUri_secretName": {
+						"value": "[parameters('azurementoringstoragemhs_online_properties_typeProperties_sasUri_secretName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mentoring-adf-mhs_ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "mentoring-adf-mhs_ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mentoring-adf-mhs_ArmTemplate_1')]"
+			]
+		}
+	]
+}
